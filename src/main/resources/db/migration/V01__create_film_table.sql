@@ -3,7 +3,7 @@ CREATE TABLE film (
     year       INT,
     title      VARCHAR(100),
     studio     VARCHAR(100),
-    producer   VARCHAR(100),
+    producer   VARCHAR(200),
     winner     BOOLEAN
 );
 
