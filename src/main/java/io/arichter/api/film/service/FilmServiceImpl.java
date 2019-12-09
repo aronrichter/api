@@ -13,7 +13,10 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,6 +32,92 @@ public class FilmServiceImpl implements FilmService {
     public FilmServiceImpl(FilmRepository filmRepository, ProducerService producerService) {
         this.filmRepository = filmRepository;
         this.producerService = producerService;
+    }
+
+    @Override
+    public FilmsResponse getWinners() {
+        List<Producer> producers = producerService.findAll();
+
+        HashMap<Producer, List<Integer>> producerArrayListHashMap = new HashMap<>();
+
+        for (Producer producer : producers) {
+            List<Film> films = filmRepository.findByWinnerTrueAndProducer(producer);
+
+            if (films != null && !films.isEmpty()) {
+                producerArrayListHashMap.put(producer, films.stream()
+                        .map(Film::getYear)
+                        .sorted()
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        FilmsResponse filmsResponse = new FilmsResponse();
+        filmsResponse.setMax(findMax(producerArrayListHashMap));
+        filmsResponse.setMin(findMin(producerArrayListHashMap));
+
+        return filmsResponse;
+    }
+
+    private FilmResponse findMax(HashMap<Producer, List<Integer>> producerListHashMap) {
+        Integer value = 0;
+        Integer previousWin = 0;
+        Integer followingWin = 0;
+        String producer = null;
+
+        for (Map.Entry<Producer, List<Integer>> entry : producerListHashMap.entrySet()) {
+            List<Integer> values = entry.getValue();
+
+            for (int i = 1; i < values.size(); i++) {
+                Integer difference = values.get(i) - values.get(i - 1);
+
+                if (difference > value) {
+                    value = difference;
+                    previousWin = values.get(i - 1);
+                    followingWin = values.get(i);
+                    producer = entry.getKey().getName();
+                }
+            }
+        }
+
+        FilmResponse filmResponse = new FilmResponse();
+
+        filmResponse.setProducer(producer);
+        filmResponse.setPreviousWin(previousWin);
+        filmResponse.setFollowingWin(followingWin);
+        filmResponse.setInterval(value);
+
+        return filmResponse;
+    }
+
+    private FilmResponse findMin(HashMap<Producer, List<Integer>> producerListHashMap) {
+        Integer value = 100;
+        Integer previousWin = 0;
+        Integer followingWin = 0;
+        String producer = null;
+
+        for (Map.Entry<Producer, List<Integer>> entry : producerListHashMap.entrySet()) {
+            List<Integer> values = entry.getValue();
+
+            for (int i = 1; i < values.size(); i++) {
+                Integer difference = values.get(i) - values.get(i - 1);
+
+                if (difference < value) {
+                    value = difference;
+                    previousWin = values.get(i - 1);
+                    followingWin = values.get(i);
+                    producer = entry.getKey().getName();
+                }
+            }
+        }
+
+        FilmResponse filmResponse = new FilmResponse();
+
+        filmResponse.setProducer(producer);
+        filmResponse.setPreviousWin(previousWin);
+        filmResponse.setFollowingWin(followingWin);
+        filmResponse.setInterval(value);
+
+        return filmResponse;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -77,25 +166,5 @@ public class FilmServiceImpl implements FilmService {
 
         return producersToFilm;
     }
-
-    @Override
-    public FilmsResponse getWinners() {
-        List<Producer> producers = producerService.findAll();
-
-        HashMap<Producer, List<Integer>> producerArrayListHashMap = new HashMap<>();
-
-        for (Producer producer : producers) {
-            List<Film> films = filmRepository.findByWinnerTrueAndProducer(producer);
-
-            if (films != null && !films.isEmpty()) {
-                producerArrayListHashMap.put(producer, films.stream()
-                        .map(Film::getYear)
-                        .collect(Collectors.toList()));
-            }
-        }
-
-        FilmsResponse filmsResponse = new FilmsResponse();
-
-        return filmsResponse;
-    }
 }
+
