@@ -1,11 +1,11 @@
 package io.arichter.api.film;
 
+import io.arichter.api.producer.Producer;
 import lombok.Getter;
 import lombok.Setter;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+
+import javax.persistence.*;
+import java.util.List;
 
 @Entity
 @Getter
@@ -19,6 +19,12 @@ public class Film {
     private Integer year;
     private String title;
     private String studio;
-    private String producer;
     private Boolean winner;
+
+    @ManyToMany
+    @OrderBy("name")
+    @JoinTable(name = "film_producer",
+            joinColumns = @JoinColumn(name = "film_id"),
+            inverseJoinColumns = @JoinColumn(name = "producer_id"))
+    private List<Producer> producer;
 }

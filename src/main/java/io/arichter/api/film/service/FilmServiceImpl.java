@@ -4,6 +4,8 @@ import io.arichter.api.film.Film;
 import io.arichter.api.film.FilmRepository;
 import io.arichter.api.film.payload.FilmResponse;
 import io.arichter.api.film.payload.FilmsResponse;
+import io.arichter.api.producer.Producer;
+import io.arichter.api.producer.service.ProducerService;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -11,20 +13,22 @@ import org.springframework.stereotype.Service;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class FilmServiceImpl implements FilmService {
 
     private final static String SEPARATOR = ";";
+    private final static String PRODUCER_SEPARATOR_REGEX = "[,]|\\band";
 
     private FilmRepository filmRepository;
 
-    public FilmServiceImpl(FilmRepository filmRepository) {
+    private ProducerService producerService;
+
+    public FilmServiceImpl(FilmRepository filmRepository, ProducerService producerService) {
         this.filmRepository = filmRepository;
+        this.producerService = producerService;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -43,7 +47,7 @@ public class FilmServiceImpl implements FilmService {
         film.setYear(Integer.parseInt(colunas[0]));
         film.setTitle(colunas[1]);
         film.setStudio(colunas[2]);
-        film.setProducer(colunas[3]);
+        film.setProducer(saveProducer(colunas[3]));
 
         if (colunas.length == 5) {
             film.setWinner(colunas[4].equals("yes"));
@@ -54,28 +58,44 @@ public class FilmServiceImpl implements FilmService {
         filmRepository.save(film);
     }
 
-    @Override
-    public FilmsResponse getWinners() {
-        List<Film> films = filmRepository.findByWinnerTrueOrderByProducer();
+    private List<Producer> saveProducer(String producerString) {
+        String[] producerList = producerString.split(PRODUCER_SEPARATOR_REGEX);
 
-        FilmResponse max = getBiggestIntervalWinner(films);
+        List<Producer> producersToFilm = new ArrayList<>();
 
-        return null;
-    }
+        for (String s : producerList) {
+            List<Producer> producers = producerService.findByName(s.trim());
 
-    private FilmResponse getBiggestIntervalWinner(List<Film> films) {
-        Map<String, List<Integer>> winners = new HashMap<>();
+            if (producers == null || producers.isEmpty()) {
+                Producer producerCreated = producerService.create(s.trim());
 
-        for (Film film : films) {
-            winners.put(film.getProducer(), films.stream().filter(f -> f.getProducer().equals(film.getProducer())).map(Film::getYear).collect(Collectors.toList()));
+                producersToFilm.add(producerCreated);
+            } else {
+                producersToFilm.add(producers.get(0));
+            }
         }
 
-        return null;
+        return producersToFilm;
     }
 
-    private FilmResponse getQuickestIntervalWinner() {
-        return null;
+    @Override
+    public FilmsResponse getWinners() {
+        List<Producer> producers = producerService.findAll();
+
+        HashMap<Producer, List<Integer>> producerArrayListHashMap = new HashMap<>();
+
+        for (Producer producer : producers) {
+            List<Film> films = filmRepository.findByWinnerTrueAndProducer(producer);
+
+            if (films != null && !films.isEmpty()) {
+                producerArrayListHashMap.put(producer, films.stream()
+                        .map(Film::getYear)
+                        .collect(Collectors.toList()));
+            }
+        }
+
+        FilmsResponse filmsResponse = new FilmsResponse();
+
+        return filmsResponse;
     }
-
-
 }
