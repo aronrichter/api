@@ -16,17 +16,17 @@ Contract.make {
             contentType applicationJson()
         }
         body(
-            [[
-                producer: "Producer 1",
+            [min: [
+                producer: "Joel Silver",
                 interval: 1,
-                previousWin: 2018,
-                followingWin: 2019
+                previousWin: 1990,
+                followingWin: 1991
             ],
-                [
-                    producer: "Producer 2",
-                    interval: 2,
-                    previousWin: 2017,
-                    followingWin: 2019
+                max: [
+                    producer: "Matthew Vaughn",
+                    interval: 13,
+                    previousWin: 2002,
+                    followingWin: 2015
                 ]]
         )
     }

@@ -32,15 +32,15 @@ public class Films {
 
         FilmResponse filmResponse1 = new FilmResponse();
         filmResponse1.setInterval(1);
-        filmResponse1.setPreviousWin(2018);
-        filmResponse1.setFollowingWin(2019);
-        filmResponse1.setProducer("Producer 1");
+        filmResponse1.setPreviousWin(1990);
+        filmResponse1.setFollowingWin(1991);
+        filmResponse1.setProducer("Joel Silver");
 
         FilmResponse filmResponse2 = new FilmResponse();
-        filmResponse1.setInterval(2);
-        filmResponse1.setPreviousWin(2017);
-        filmResponse1.setFollowingWin(2019);
-        filmResponse1.setProducer("Producer 1");
+        filmResponse1.setInterval(13);
+        filmResponse1.setPreviousWin(2002);
+        filmResponse1.setFollowingWin(2015);
+        filmResponse1.setProducer("Matthew Vaughn");
 
         FilmsResponse filmsResponse = new FilmsResponse();
         filmsResponse.setMin(filmResponse1);
